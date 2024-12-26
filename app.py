@@ -1,4 +1,3 @@
-!pip install matplotlib
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -19,12 +18,8 @@ def main():
 
     @st.cache_data
     def load_data():
-        import pandas as pd
-
-        url = "https://github.com/Mohsenselseleh/mushrooms/blob/main/mushrooms.csv"
+        url = "https://raw.githubusercontent.com/Mohsenselseleh/mushrooms/main/mushrooms.csv"
         data = pd.read_csv(url)
-
-        data = pd.read_csv("./mushrooms.csv")
         labelencoder = LabelEncoder()
         for col in data.columns:
             data[col] = labelencoder.fit_transform(data[col])
@@ -61,7 +56,6 @@ def main():
 
     df = load_data()
     class_names = ['edible', 'poisonous']
-
     x_train, x_test, y_train, y_test = split(df)
 
     st.sidebar.subheader("Choose Classifier")
@@ -72,9 +66,8 @@ def main():
         C = st.sidebar.number_input("C (Regularization parameter)", 0.01, 10.0, step=0.01, key='C_SVM')
         kernel = st.sidebar.radio("Kernel", ("rbf", "linear"), key='kernel')
         gamma = st.sidebar.radio("Gamma (Kernel Coefficient)", ("scale", "auto"), key='gamma')
-
         metrics = st.sidebar.multiselect("What metrics to plot?", ('Confusion Matrix', 'ROC Curve', 'Precision-Recall Curve'))
-        
+
         if st.sidebar.button("Classify", key='classify'):
             st.subheader("Support Vector Machine (SVM) Results")
             model = SVC(C=C, kernel=kernel, gamma=gamma, probability=True)
@@ -90,7 +83,6 @@ def main():
         st.sidebar.subheader("Model Hyperparameters")
         C = st.sidebar.number_input("C (Regularization parameter)", 0.01, 10.0, step=0.01, key='C_LR')
         max_iter = st.sidebar.slider("Maximum number of iterations", 100, 500, key='max_iter')
-
         metrics = st.sidebar.multiselect("What metrics to plot?", ('Confusion Matrix', 'ROC Curve', 'Precision-Recall Curve'))
 
         if st.sidebar.button("Classify", key='classify'):
@@ -126,8 +118,7 @@ def main():
         st.subheader("Mushroom Data Set (Classification)")
         st.write(df)
         st.markdown("This [data set](https://archive.ics.uci.edu/ml/datasets/Mushroom) includes descriptions of hypothetical samples corresponding to 23 species of gilled mushrooms "
-        "in the Agaricus and Lepiota Family (pp. 500-525). Each species is identified as definitely edible, definitely poisonous, "
-        "or of unknown edibility and not recommended. This latter class was combined with the poisonous one.")
+        "in the Agaricus and Lepiota Family.")
 
 if __name__ == '__main__':
     main()
