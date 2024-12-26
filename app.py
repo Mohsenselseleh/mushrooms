@@ -19,6 +19,11 @@ def main():
 
     @st.cache_data
     def load_data():
+        import pandas as pd
+
+        url = "https://github.com/Mohsenselseleh/mushrooms/blob/main/mushrooms.csv"
+        data = pd.read_csv(url)
+
         data = pd.read_csv("./mushrooms.csv")
         labelencoder = LabelEncoder()
         for col in data.columns:
