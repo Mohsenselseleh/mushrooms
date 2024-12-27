@@ -1,99 +1,48 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-!pip install matplotlib
-from sklearn.svm import SVC
-from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import ConfusionMatrixDisplay, RocCurveDisplay, PrecisionRecallDisplay
-from sklearn.metrics import precision_score, recall_score
-import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score
 
-# Title and Description
-st.set_page_config(page_title="ML Model Comparison", layout="wide")
-st.title("Machine Learning Model Comparison App")
-st.markdown("""
-This app allows you to:
-- Explore a dataset
-- Choose features and a target for classification
-- Select a machine learning model (SVC, Logistic Regression, Random Forest)
-- View evaluation metrics (Confusion Matrix, ROC Curve, Precision-Recall Curve)
-""")
+# Load data
+@st.cache
+def load_data():
+    data = pd.read_csv("mushrooms.csv")
+    data = pd.get_dummies(data, drop_first=True)  # Convert categorical to numeric
+    return data
 
-# File Upload
-st.sidebar.header("Dataset Upload")
-uploaded_file = st.sidebar.file_uploader("https://github.com/Mohsenselseleh/mushrooms/blob/main/mushrooms.csv", type=["csv"], help="Upload a CSV file to get started.")
-
-if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file)
-    st.write("### Dataset Preview")
-    st.dataframe(df, width=800, height=400)
-
-    # Feature Selection
-    st.sidebar.header("Feature Selection")
-    target_col = st.sidebar.selectbox("Select Target Column", options=df.columns, help="Choose the target variable for classification.")
-
-    # Encode categorical variables
-    le = LabelEncoder()
-    for column in df.select_dtypes(include=['object']).columns:
-        df[column] = le.fit_transform(df[column])
-
-    features = df.drop(columns=[target_col])
-    target = df[target_col]
-
-    # Train-Test Split
-    X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.3, random_state=42)
-
-    # Model Selection
-    st.sidebar.header("Model Selection")
-    model_choice = st.sidebar.selectbox(
-        "Select Model",
-        ["SVC", "Logistic Regression", "Random Forest"],
-        help="Choose a machine learning model to train and evaluate."
-    )
-
-    if model_choice == "SVC":
-        model = SVC(probability=True, random_state=42)
-    elif model_choice == "Logistic Regression":
-        model = LogisticRegression(random_state=42)
-    else:
-        model = RandomForestClassifier(random_state=42)
-
-    # Train Model
+# Train model
+@st.cache
+def train_model(data):
+    X = data.drop(columns=['type_poisonous'])  # Features
+    y = data['type_poisonous']                # Target
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    model = RandomForestClassifier(random_state=42)
     model.fit(X_train, y_train)
+    accuracy = accuracy_score(y_test, model.predict(X_test))
+    return model, accuracy
 
-    # Predictions
-    y_pred = model.predict(X_test)
-    precision = precision_score(y_test, y_pred, average='binary')
-    recall = recall_score(y_test, y_pred, average='binary')
+# Main app
+st.title("Mushroom Classification 🍄")
+st.write("Predict whether a mushroom is edible or poisonous based on its features.")
 
-    st.write("### Model Performance")
-    st.metric(label="Precision", value=f"{precision:.2f}")
-    st.metric(label="Recall", value=f"{recall:.2f}")
+# Load and display data
+data = load_data()
+if st.checkbox("Show raw data"):
+    st.write(data)
 
-    # Visualization
-    st.write("### Evaluation Metrics")
+# Train model
+model, accuracy = train_model(data)
+st.write(f"Model Accuracy: {accuracy:.2f}")
 
-    col1, col2, col3 = st.columns(3)
+# User inputs
+st.sidebar.header("Input Mushroom Features")
+cap_shape = st.sidebar.slider("Cap Shape", 0, 5, 1)
+cap_surface = st.sidebar.slider("Cap Surface", 0, 3, 1)
+cap_color = st.sidebar.slider("Cap Color", 0, 9, 1)
 
-    with col1:
-        st.write("#### Confusion Matrix")
-        fig, ax = plt.subplots()
-        ConfusionMatrixDisplay.from_estimator(model, X_test, y_test, ax=ax, cmap='Blues')
-        st.pyplot(fig)
-
-    with col2:
-        st.write("#### ROC Curve")
-        fig, ax = plt.subplots()
-        RocCurveDisplay.from_estimator(model, X_test, y_test, ax=ax)
-        st.pyplot(fig)
-
-    with col3:
-        st.write("#### Precision-Recall Curve")
-        fig, ax = plt.subplots()
-        PrecisionRecallDisplay.from_estimator(model, X_test, y_test, ax=ax)
-        st.pyplot(fig)
-else:
-    st.info("Please upload a CSV file to start using the app.")
+# Predict
+if st.sidebar.button("Predict"):
+    prediction = model.predict([[cap_shape, cap_surface, cap_color]])
+    result = "Poisonous ☠️" if prediction[0] else "Edible 🍽️"
+    st.write("Prediction:", result)
