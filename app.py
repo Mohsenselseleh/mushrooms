@@ -22,7 +22,7 @@ This app allows you to:
 
 # File Upload
 st.sidebar.header("Dataset Upload")
-uploaded_file = st.sidebar.file_uploader("Upload your CSV file", type=["csv"])
+uploaded_file = st.sidebar.file_uploader("https://github.com/Mohsenselseleh/mushrooms/blob/main/mushrooms.csv", type=["csv"])
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
