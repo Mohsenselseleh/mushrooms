@@ -6,11 +6,12 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import plot_confusion_matrix, plot_roc_curve, plot_precision_recall_curve
+from sklearn.metrics import ConfusionMatrixDisplay, RocCurveDisplay, PrecisionRecallDisplay
 from sklearn.metrics import precision_score, recall_score
 import matplotlib.pyplot as plt
 
 # Title and Description
+st.set_page_config(page_title="ML Model Comparison", layout="wide")
 st.title("Machine Learning Model Comparison App")
 st.markdown("""
 This app allows you to:
@@ -22,16 +23,16 @@ This app allows you to:
 
 # File Upload
 st.sidebar.header("Dataset Upload")
-uploaded_file = st.sidebar.file_uploader("https://github.com/Mohsenselseleh/mushrooms/blob/main/mushrooms.csv", type=["csv"])
+uploaded_file = st.sidebar.file_uploader("Upload your CSV file", type=["csv"], help="Upload a CSV file to get started.")
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
     st.write("### Dataset Preview")
-    st.dataframe(df)
+    st.dataframe(df, width=800, height=400)
 
     # Feature Selection
     st.sidebar.header("Feature Selection")
-    target_col = st.sidebar.selectbox("Select Target Column", options=df.columns)
+    target_col = st.sidebar.selectbox("Select Target Column", options=df.columns, help="Choose the target variable for classification.")
 
     # Encode categorical variables
     le = LabelEncoder()
@@ -46,14 +47,18 @@ if uploaded_file is not None:
 
     # Model Selection
     st.sidebar.header("Model Selection")
-    model_choice = st.sidebar.selectbox("Select Model", ["SVC", "Logistic Regression", "Random Forest"])
+    model_choice = st.sidebar.selectbox(
+        "Select Model",
+        ["SVC", "Logistic Regression", "Random Forest"],
+        help="Choose a machine learning model to train and evaluate."
+    )
 
     if model_choice == "SVC":
-        model = SVC(probability=True)
+        model = SVC(probability=True, random_state=42)
     elif model_choice == "Logistic Regression":
-        model = LogisticRegression()
+        model = LogisticRegression(random_state=42)
     else:
-        model = RandomForestClassifier()
+        model = RandomForestClassifier(random_state=42)
 
     # Train Model
     model.fit(X_train, y_train)
@@ -64,25 +69,30 @@ if uploaded_file is not None:
     recall = recall_score(y_test, y_pred, average='binary')
 
     st.write("### Model Performance")
-    st.write(f"Precision: {precision:.2f}")
-    st.write(f"Recall: {recall:.2f}")
+    st.metric(label="Precision", value=f"{precision:.2f}")
+    st.metric(label="Recall", value=f"{recall:.2f}")
 
     # Visualization
-    st.write("### Confusion Matrix")
-    fig, ax = plt.subplots()
-    plot_confusion_matrix(model, X_test, y_test, ax=ax, cmap='Blues')
-    st.pyplot(fig)
+    st.write("### Evaluation Metrics")
 
-    st.write("### ROC Curve")
-    fig, ax = plt.subplots()
-    plot_roc_curve(model, X_test, y_test, ax=ax)
-    st.pyplot(fig)
+    col1, col2, col3 = st.columns(3)
 
-    st.write("### Precision-Recall Curve")
-    fig, ax = plt.subplots()
-    plot_precision_recall_curve(model, X_test, y_test, ax=ax)
-    st.pyplot(fig)
+    with col1:
+        st.write("#### Confusion Matrix")
+        fig, ax = plt.subplots()
+        ConfusionMatrixDisplay.from_estimator(model, X_test, y_test, ax=ax, cmap='Blues')
+        st.pyplot(fig)
+
+    with col2:
+        st.write("#### ROC Curve")
+        fig, ax = plt.subplots()
+        RocCurveDisplay.from_estimator(model, X_test, y_test, ax=ax)
+        st.pyplot(fig)
+
+    with col3:
+        st.write("#### Precision-Recall Curve")
+        fig, ax = plt.subplots()
+        PrecisionRecallDisplay.from_estimator(model, X_test, y_test, ax=ax)
+        st.pyplot(fig)
 else:
-    st.info("Please upload a CSV file to get started.")
-
-
+    st.info("Please upload a CSV file to start using the app.")
