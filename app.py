@@ -5,14 +5,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
 # Load data
-@st.cache
+@st.cache_data
 def load_data():
-    data = pd.read_csv("mushrooms.csv")
+    data = pd.read_csv("https://raw.githubusercontent.com/dataprofessor/data/master/mushrooms.csv")
     data = pd.get_dummies(data, drop_first=True)  # Convert categorical to numeric
     return data
 
 # Train model
-@st.cache
+@st.cache_data
 def train_model(data):
     X = data.drop(columns=['type_poisonous'])  # Features
     y = data['type_poisonous']                # Target
@@ -41,8 +41,16 @@ cap_shape = st.sidebar.slider("Cap Shape", 0, 5, 1)
 cap_surface = st.sidebar.slider("Cap Surface", 0, 3, 1)
 cap_color = st.sidebar.slider("Cap Color", 0, 9, 1)
 
+# Prepare input data
+input_features = pd.DataFrame({
+    'cap_shape': [cap_shape],
+    'cap_surface': [cap_surface],
+    'cap_color': [cap_color]
+})
+
 # Predict
 if st.sidebar.button("Predict"):
-    prediction = model.predict([[cap_shape, cap_surface, cap_color]])
-    result = "Poisonous ☠️" if prediction[0] else "Edible 🍽️"
-    st.write("Prediction:", result)
+    prediction = model.predict(input_features)
+    result = "Poisonous ☠️" if prediction[0] else "Edible 🍲"
+    st.subheader("Prediction")
+    st.write(result)
