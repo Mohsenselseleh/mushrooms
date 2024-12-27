@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score
 # Load data
 @st.cache_data
 def load_data():
-    data = pd.read_csv("https://raw.githubusercontent.com/dataprofessor/data/master/mushrooms.csv")
+    data = pd.read_csv("https://github.com/Mohsenselseleh/mushrooms/blob/main/mushrooms.csv")
     data = pd.get_dummies(data, drop_first=True)  # Convert categorical to numeric
     return data
 
